@@ -46,7 +46,7 @@ import ij.plugin.frame.PlugInFrame;
 
 
 /**
- * KymographMeasurer.java
+ * New.java
  * Purpose: imageJ plugin to measure kymographs
  *
  * @author Han Liu
@@ -122,6 +122,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 
 	// image properties
 	protected ImagePlus image;
+	private String imageDirectory;
 	private ImageWindow window;
 	private ImageCanvas canvas;
 	
@@ -143,6 +144,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		
 		// Get the associated image parameters
 		image = IJ.getImage();
+		imageDirectory = IJ.getDir("image");
 		window = image.getWindow();
 		canvas = image.getCanvas();
 		finished = true;
@@ -314,8 +316,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		new ImageJ();
 
 		// open example stack
-		String imagePath = "/Users/mrsata/Desktop/microtubules/Kymograph examples_Han/500 nM SPR1-GFP Slide1 m2_1.tif";
-		ImagePlus image = IJ.openImage(imagePath);
+		String examplePath = "/Users/mrsata/Desktop/microtubules/Kymograph examples_Han/500 nM SPR1-GFP Slide1 m2_1.tif";
+		ImagePlus image = IJ.openImage(examplePath);
 		image.show();
 
 		// run the test plugin
@@ -687,15 +689,15 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		if (lines != null) {
 			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
 			String label = image.getTitle();
-			String path = "/Users/mrsata/Desktop/microtubules/Kymograph examples_Han/";
-			String imagepath = path + label + timeStamp + ".tif";
-			String filename = path + label + timeStamp + ".csv";
+			String saveDir = imageDirectory;
+			String imagePath = saveDir + label + timeStamp + ".tif";
+			String filePath = saveDir + label + timeStamp + ".csv";
 			if (image.changes) {
 				FileSaver saver = new FileSaver(image);
-				boolean success = saver.saveAsTiff(imagepath);
+				boolean success = saver.saveAsTiff(imagePath);
 				if (success) IJ.log("Output: Image saved.");
 			}
-			try (PrintWriter out = new PrintWriter(filename)) {
+			try (PrintWriter out = new PrintWriter(filePath)) {
 
 				String label1 = "Index, Label, Phase, Distance(um), Time(s), "
 					+ "Rate growth(um/s), Rate shrink(um/s), ";
