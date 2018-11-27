@@ -73,9 +73,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	private Button drawLeft;
 	private Button drawRight;
 	private Button drawLines;
-	// private Label totalDistance;
-	// private Label totalLifetime;
-	// private Label dynamicity;
 
 
 	// control variables
@@ -104,9 +101,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	private final int FREQRES = 5;
 	private final int DGROWTH = 6;
 	private final int DSHRINK = 7;
-	// private final int TTLDIST = 0;
-	// private final int TTLLFTM = 1;
-	// private final int DYNMCTY = 2;
 
 
 	// ROI data
@@ -116,7 +110,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	private double[][] data;
 	private ArrayList<Integer> starts;
 	private ArrayList<double[]> data2;
-	// private double[] data3;
 	private int numMicrotubule;
 
 
@@ -142,17 +135,14 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 */
 	public void run(String arg0) {
 		
-		// Get the associated image parameters
+		// get the associated image parameters
 		image = IJ.getImage();
 		imageDirectory = IJ.getDir("image");
 		window = image.getWindow();
 		canvas = image.getCanvas();
-		finished = true;
 		showOverlay = true;
-		IJ.setTool("polyline");
-		IJ.run(image, "Line Width...", "line=2");
-		redraw();
 		drawRight();
+		IJ.run(image, "Line Width...", "line=2");
 
 	}
 
@@ -239,13 +229,13 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		mainPanel.add(timeShrink);
 		
 		numCatastrophe = new Label("0");
-		Label numCatastropheLabel = new Label(" # Catastrophe: ");
+		Label numCatastropheLabel = new Label(" Number of Catastrophe: ");
 		numCatastropheLabel.setAlignment(Label.RIGHT);
 		mainPanel.add(numCatastropheLabel);
 		mainPanel.add(numCatastrophe);
 		
 		numRescue = new Label("0");
-		Label numRescueLabel = new Label(" # Rescue: ");
+		Label numRescueLabel = new Label(" Number of Rescue: ");
 		numRescueLabel.setAlignment(Label.RIGHT);
 		mainPanel.add(numRescueLabel);
 		mainPanel.add(numRescue);
@@ -261,24 +251,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		frequencyRescueLabel.setAlignment(Label.RIGHT);
 		mainPanel.add(frequencyRescueLabel);
 		mainPanel.add(frequencyRescue);
-		
-		// totalDistance = new Label("0");
-		// Label totalDistanceLabel = new Label(" Total Distance: ");
-		// totalDistanceLabel.setAlignment(Label.RIGHT);
-		// mainPanel.add(totalDistanceLabel);
-		// mainPanel.add(totalDistance);
-		
-		// totalLifetime = new Label("0");
-		// Label totalLifetimeLabel = new Label(" Total Lifetime: ");
-		// totalLifetimeLabel.setAlignment(Label.RIGHT);
-		// mainPanel.add(totalLifetimeLabel);
-		// mainPanel.add(totalLifetime);
-		
-		// dynamicity = new Label("0");
-		// Label dynamicityLabel = new Label(" Dynamicity: ");
-		// dynamicityLabel.setAlignment(Label.RIGHT);
-		// mainPanel.add(dynamicityLabel);
-		// mainPanel.add(dynamicity);
 
 		drawLines = new Button("Clear Overlay");
 		drawLines.addActionListener(this);
@@ -348,11 +320,19 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		data = null;
 		starts = null;
 		data2 = null;
-		// data3 = null;
 		numMicrotubule = 0;
-		finished = false;
+		finished = true;
 
 		// clear display
+		clearDisplay();
+
+		// reset listeners
+		removeListeners();
+		addListeners();
+
+	}
+
+	private void clearDisplay() {
 		phase.setText("0");
 		distance.setText("0");
 		time.setText("0");
@@ -365,14 +345,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		frequencyRescue.setText("0");
 		distanceGrowth.setText("0");
 		distanceShrink.setText("0");
-		// totalDistance.setText("0");
-		// totalLifetime.setText("0");
-		// dynamicity.setText("0");
-
-		// reset listeners
-		removeListeners();
-		addListeners();
-
 	}
 
 	/**
@@ -381,6 +353,9 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 * @return void.
 	 */
 	private void drawLeft() {
+		if (image == null) return;
+		image.deleteRoi();
+		IJ.setTool("polyline");
 		side = LEFT;
 		drawLeft.setForeground(Color.LIGHT_GRAY);
 		drawRight.setForeground(Color.BLACK);
@@ -394,6 +369,9 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 * @return void.
 	 */
 	private void drawRight() {
+		if (image == null) return;
+		image.deleteRoi();
+		IJ.setTool("polyline");
 		side = RIGHT;
 		drawRight.setForeground(Color.LIGHT_GRAY);
 		drawLeft.setForeground(Color.BLACK);
@@ -401,6 +379,11 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		IJ.log("Start new drawing on the right side");
 	}
 
+	/**
+	 * Change overlay show option.
+	 *
+	 * @return void.
+	 */
 	private void changeOverlayShowOption(){
 		showOverlay = !showOverlay;
 		drawLines.setLabel(showOverlay ? "Clear Overlay" : "Show Overlay");
@@ -490,11 +473,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		Polygon currentPolygon = currentPolyline.getPolygon();
 		int[] x = currentPolygon.xpoints;
 		int[] y = currentPolygon.ypoints;
-		// IJ.log("Polyn " + String.valueOf(n));
-		// IJ.log("Polyx1 " + String.valueOf(x[0]));
-		// IJ.log("Polyy1 " + String.valueOf(y[0]));
-		// IJ.log("Polyx2 " + String.valueOf(x[1]));
-		// IJ.log("Polyy2 " + String.valueOf(y[1]));
 		if (finished) n+=1;
 		if (n > 2) {
 			lines = new Line[n-2];
@@ -510,7 +488,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		int[] x = {line.x1, line.x2};
 		int[] y = {line.y1, line.y2};
 		if (y[0] >= y[1]) return UNDEFINED;
-		// IJ.log("Warning: undefined horizontal/upward line drawn");
 		if (side == LEFT) {
 			if (Math.abs(x[1] - x[0]) < pauseTolerance) {
 				return PAUSE;
@@ -577,9 +554,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			Line line = lines[i];
 			int width = Math.abs(line.x2 - line.x1);
 			int height = line.y2 - line.y1;	
-			// IJ.log("index " + String.valueOf(i));
-			// IJ.log("width " + String.valueOf(width));
-			// IJ.log("height " + String.valueOf(height));
 			data[PHASE][i] = getPhase(line);
 			data[DIST][i] = width * DISTANCERATIO;
 			data[TIME][i] = height * TIMERATIO;
@@ -616,12 +590,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			}
 		}
 		numMicrotubule = data2.size();
-		// data3 = new double[3];
-		// for (int i=0; i < data[DIST].length; i++) {
-		// 	if (data[PHASE][i] != PAUSE) data3[TTLDIST] += data[DIST][i];
-		// }
-		// data3[TTLLFTM] = image.getHeight() * TIMERATIO;
-		// data3[DYNMCTY] = data3[TTLDIST] / data3[TTLLFTM];
 		return;
 	}
 
@@ -643,10 +611,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
 		distanceGrowth.setText(String.valueOf(currData2[DGROWTH]));
 		distanceShrink.setText(String.valueOf(currData2[DSHRINK]));
-		// if (data3 == null) return;
-		// totalDistance.setText(String.valueOf(data3[TTLDIST]));
-		// totalLifetime.setText(String.valueOf(data3[TTLDIST]));
-		// dynamicity.setText(String.valueOf(data3[DYNMCTY]));
 	}
 
 	private void draw() {
@@ -686,7 +650,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 
 	private void output() {
 		
-		if (lines != null) {
+		if (lines != null && image.isVisible()) {
 			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
 			String label = image.getTitle();
 			String saveDir = imageDirectory;
@@ -814,10 +778,21 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	public void imageUpdated(ImagePlus ip) {}
 	
 	@Override
-	public void imageClosed(ImagePlus ip) {}
+	public void imageClosed(ImagePlus ip) {
+		IJ.log("Image closed");
+		clearDisplay();
+	}
 
 	@Override
-	public void imageOpened(ImagePlus arg0) {}
+	public void imageOpened(ImagePlus arg0) {
+		IJ.log("Image opened");
+		// get the associated image parameters
+		image = IJ.getImage();
+		imageDirectory = IJ.getDir("image");
+		window = image.getWindow();
+		canvas = image.getCanvas();
+		redraw();
+	}
 
 	/**
 	 * Notified by KeyListener when an event occurs. Used to change overlay show option. 
@@ -829,7 +804,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 
 		int keyCode = e.getKeyCode();
 		
-		if(keyCode == OVERLAY_KEY) { // if "O" is pressed
+		if(keyCode == OVERLAY_KEY) { // if "Control" is pressed
         	
 			changeOverlayShowOption();
 			
