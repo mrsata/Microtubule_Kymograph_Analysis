@@ -11,7 +11,7 @@ import java.awt.Panel;
 import java.awt.Polygon;
 import java.awt.Button;
 import java.awt.Color;
-
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -70,9 +70,17 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	private Label frequencyRescue;
 	private Label distanceGrowth;
 	private Label distanceShrink;
+	private Label xscale;
+	private Label yscale;
+	private Label pauseAngle;
 	private Button drawLeft;
 	private Button drawRight;
-	private Button drawLines;
+	private Button drawOverlay;
+	private Button output;
+	private Button changeX;
+	private Button changeY;
+	private Button savePath;
+	private Button changePause;
 
 
 	// control variables
@@ -83,9 +91,10 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	private final int SHRINK = 1;
 	private final int PAUSE = 2;
 	private final int UNDEFINED = -1;
-	private int pauseTolerance = 3;
-	private double DISTANCERATIO = 0.08;
-	private double TIMERATIO = 2.5;
+	private double XSCALE = 0.08;
+	private double YSCALE = 2.5;
+	private double PAUSEANGLE = 3;
+	private String savingPath;
 
 
 	// data indexing
@@ -138,6 +147,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		// get the associated image parameters
 		image = IJ.getImage();
 		imageDirectory = IJ.getDir("image");
+		savingPath = imageDirectory;
 		window = image.getWindow();
 		canvas = image.getCanvas();
 		showOverlay = true;
@@ -167,100 +177,182 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		
 		frame.setVisible(true);
 		frame.setTitle("New Plugin");
-		frame.setSize(400, 300);
+		frame.setSize(320, 500);
 		
-		Panel mainPanel = new Panel();
-		mainPanel.setLayout(new GridLayout(14,2));
+		Panel drawPanel = new Panel();
+		Panel statPanel = new Panel();
+		Panel settPanel = new Panel();
+		Panel funcPanel = new Panel();
+
+		frame.setLayout(new FlowLayout());
+
+		drawPanel.setLayout(new GridLayout());
+		statPanel.setLayout(new GridLayout(12,2));
+		settPanel.setLayout(new GridLayout(3,1));
+		funcPanel.setLayout(new FlowLayout());
 		
+
+		// Draw buttons
+
 		drawLeft = new Button("Draw Left");
 		drawLeft.addActionListener(this);
-		mainPanel.add(drawLeft);
+		drawPanel.add(drawLeft);
 
 		drawRight = new Button("Draw Right");
 		drawRight.addActionListener(this);
-		mainPanel.add(drawRight);
+		drawPanel.add(drawRight);
+
+		frame.add(drawPanel);
+
+
+		// Statisitcs
+
+		Panel statTitle = new Panel(new GridLayout());
+		Label statLabel = new Label(" Statistics ");
+		statLabel.setAlignment(Label.CENTER);
+		statTitle.add(new Label("----------"));
+		statTitle.add(statLabel);
+		statTitle.add(new Label("----------"));
+		frame.add(statTitle);
 
 		phase = new Label("0");
 		Label phaseLabel = new Label(" Phase: ");
 		phaseLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(phaseLabel);
-		mainPanel.add(phase);
+		statPanel.add(phaseLabel);
+		statPanel.add(phase);
 
 		distance = new Label("0");
 		Label distanceLabel = new Label(" Distance: ");
 		distanceLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(distanceLabel);
-		mainPanel.add(distance);
+		statPanel.add(distanceLabel);
+		statPanel.add(distance);
 		
 		time = new Label("0");
 		Label timeLabel = new Label(" Time: ");
 		timeLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(timeLabel);
-		mainPanel.add(time);
+		statPanel.add(timeLabel);
+		statPanel.add(time);
 
 		rate = new Label("0");
 		Label rateLabel = new Label(" Rate: ");
 		rateLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(rateLabel);
-		mainPanel.add(rate);
+		statPanel.add(rateLabel);
+		statPanel.add(rate);
 		
 		distanceGrowth = new Label("0");
 		Label distanceGrowthLabel = new Label(" Distance Growth: ");
 		distanceGrowthLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(distanceGrowthLabel);
-		mainPanel.add(distanceGrowth);
+		statPanel.add(distanceGrowthLabel);
+		statPanel.add(distanceGrowth);
 		
 		distanceShrink = new Label("0");
 		Label distanceShrinkLabel = new Label(" Distance Shrink: ");
 		distanceShrinkLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(distanceShrinkLabel);
-		mainPanel.add(distanceShrink);
+		statPanel.add(distanceShrinkLabel);
+		statPanel.add(distanceShrink);
 
 		timeGrowth = new Label("0");
 		Label timeGrowthLabel = new Label(" Time Growth: ");
 		timeGrowthLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(timeGrowthLabel);
-		mainPanel.add(timeGrowth);
+		statPanel.add(timeGrowthLabel);
+		statPanel.add(timeGrowth);
 		
 		timeShrink = new Label("0");
 		Label timeShrinkLabel = new Label(" Time Shrink: ");
 		timeShrinkLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(timeShrinkLabel);
-		mainPanel.add(timeShrink);
+		statPanel.add(timeShrinkLabel);
+		statPanel.add(timeShrink);
 		
 		numCatastrophe = new Label("0");
 		Label numCatastropheLabel = new Label(" Number of Catastrophe: ");
 		numCatastropheLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(numCatastropheLabel);
-		mainPanel.add(numCatastrophe);
+		statPanel.add(numCatastropheLabel);
+		statPanel.add(numCatastrophe);
 		
 		numRescue = new Label("0");
 		Label numRescueLabel = new Label(" Number of Rescue: ");
 		numRescueLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(numRescueLabel);
-		mainPanel.add(numRescue);
+		statPanel.add(numRescueLabel);
+		statPanel.add(numRescue);
 
 		frequencyCatastrophe = new Label("0");
 		Label frequencyCatastropheLabel = new Label(" Frequency Catastrophe: ");
 		frequencyCatastropheLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(frequencyCatastropheLabel);
-		mainPanel.add(frequencyCatastrophe);
+		statPanel.add(frequencyCatastropheLabel);
+		statPanel.add(frequencyCatastrophe);
 		
 		frequencyRescue = new Label("0");
 		Label frequencyRescueLabel = new Label(" Frequency Rescue: ");
 		frequencyRescueLabel.setAlignment(Label.RIGHT);
-		mainPanel.add(frequencyRescueLabel);
-		mainPanel.add(frequencyRescue);
+		statPanel.add(frequencyRescueLabel);
+		statPanel.add(frequencyRescue);
 
-		drawLines = new Button("Clear Overlay");
-		drawLines.addActionListener(this);
-		mainPanel.add(drawLines);
+		frame.add(statPanel);
 
-		Button output = new Button("Output");
+
+		// Settings and outputs
+
+		Panel settTitle = new Panel(new FlowLayout());
+		Label settLabel = new Label(" Settings ");
+		settLabel.setAlignment(Label.CENTER);
+		settTitle.add(new Label("----------"));
+		settTitle.add(settLabel);
+		settTitle.add(new Label("----------"));
+		frame.add(settTitle);
+		
+		Panel xscalePanel = new Panel();
+		xscalePanel.setLayout(new FlowLayout());
+		xscale = new Label(String.valueOf(XSCALE));
+		Label xscaleLabel = new Label(" X-scale(μm/pixel): ");
+		xscaleLabel.setAlignment(Label.RIGHT);
+		xscalePanel.add(xscaleLabel);
+		xscalePanel.add(xscale);
+		changeX = new Button("Change X-scale");
+		changeX.addActionListener(this);
+		xscalePanel.add(changeX);
+		settPanel.add(xscalePanel);
+		
+		Panel yscalePanel = new Panel();
+		yscalePanel.setLayout(new FlowLayout());
+		yscale = new Label(String.valueOf(YSCALE));
+		Label yscaleLabel = new Label(" Y-scale(sec/pixel): ");
+		yscaleLabel.setAlignment(Label.RIGHT);
+		yscalePanel.add(yscaleLabel);
+		yscalePanel.add(yscale);
+		changeY = new Button("Change Y-scale");
+		changeY.addActionListener(this);
+		yscalePanel.add(changeY);
+		settPanel.add(yscalePanel);
+
+		Panel pausePanel = new Panel();
+		pausePanel.setLayout(new FlowLayout());
+		pauseAngle = new Label(String.valueOf(PAUSEANGLE));
+		Label pauseLabel = new Label(" Pause Angle(°): ");
+		pauseLabel.setAlignment(Label.RIGHT);
+		pausePanel.add(pauseLabel);
+		pausePanel.add(pauseAngle);
+		changePause = new Button("Change Pause Angle");
+		changePause.addActionListener(this);
+		pausePanel.add(changePause);
+		settPanel.add(pausePanel);
+
+
+		// Other functions
+
+		savePath = new Button("Change Save Folder");
+		savePath.addActionListener(this);
+		funcPanel.add(savePath);
+
+		drawOverlay = new Button("Clear Overlay");
+		drawOverlay.addActionListener(this);
+		funcPanel.add(drawOverlay);
+
+		output = new Button("Output");
 		output.addActionListener(this);
-		mainPanel.add(output);
+		funcPanel.add(output);
 
-		frame.add(mainPanel);	
+		frame.add(settPanel);
+		frame.add(funcPanel);
 	}
 	
 	/***************************************************************************************
@@ -345,6 +437,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		frequencyRescue.setText("0");
 		distanceGrowth.setText("0");
 		distanceShrink.setText("0");
+		xscale.setText(String.valueOf(XSCALE));
+		yscale.setText(String.valueOf(YSCALE));
 	}
 
 	/**
@@ -380,13 +474,77 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	}
 
 	/**
+	 * Change the scale for X-axis.
+	 *
+	 * @return void.
+	 */
+	private void changeXScale() {
+		double newXscale = IJ.getNumber("X-scale", XSCALE);
+		if (newXscale <= 0) {
+			IJ.error("X-scale must be positive");
+		}
+		else{
+			XSCALE = newXscale;
+			xscale.setText(String.valueOf(XSCALE));
+			IJ.log("X-scale changed");
+		}
+	}
+
+	/**
+	 * Change the scale for Y-axis.
+	 *
+	 * @return void.
+	 */
+	private void changeYScale() {
+		double newYscale = IJ.getNumber("Y-scale", YSCALE);
+		if (newYscale <= 0) {
+			IJ.error("Y-scale must be positive");
+		}
+		else{
+			YSCALE = newYscale;
+			yscale.setText(String.valueOf(YSCALE));
+			IJ.log("Y-scale changed");
+		}
+	}
+
+	/**
+	 * Change the pause angle.
+	 *
+	 * @return void.
+	 */
+	private void changePauseAngle() {
+		double newPauseAngle = IJ.getNumber("Pause Angle", PAUSEANGLE);
+		if (newPauseAngle <= 0 || newPauseAngle >= 180) {
+			IJ.error("Pause Angle must be within 0 to 180 degree");
+		}
+		else{
+			PAUSEANGLE = newPauseAngle;
+			pauseAngle.setText(String.valueOf(PAUSEANGLE));
+			IJ.log("Pause Angle changed");
+		}
+	}
+
+	/**
+	 * Start new drawing on the right side.
+	 *
+	 * @return void.
+	 */
+	private void changeSavingPath() {
+		String newSavingPath = IJ.getDirectory("Saving Location");
+		if (newSavingPath != null) {
+			savingPath = newSavingPath;
+			IJ.log("Saving location changed to: " + savingPath);
+		}
+	}
+
+	/**
 	 * Change overlay show option.
 	 *
 	 * @return void.
 	 */
 	private void changeOverlayShowOption(){
 		showOverlay = !showOverlay;
-		drawLines.setLabel(showOverlay ? "Clear Overlay" : "Show Overlay");
+		drawOverlay.setLabel(showOverlay ? "Clear Overlay" : "Show Overlay");
 		IJ.log(showOverlay ? "Show Overlay" : "Clear Overlay");
 		draw();
 	}
@@ -452,6 +610,18 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		else if (label == "Draw Right"){
 			drawRight();
 		}
+		else if (label == "Change X-scale"){
+			changeXScale();
+		}
+		else if (label == "Change Y-scale"){
+			changeYScale();
+		}
+		else if (label == "Change Pause Angle"){
+			changePauseAngle();
+		}
+		else if (label == "Change Saving Location"){
+			changeSavingPath();
+		}
 		else if (label == "Clear Overlay" || label == "Show Overlay"){
 			changeOverlayShowOption();
 		}
@@ -489,7 +659,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		int[] y = {line.y1, line.y2};
 		if (y[0] >= y[1]) return UNDEFINED;
 		if (side == LEFT) {
-			if (Math.abs(x[1] - x[0]) < pauseTolerance) {
+			if (Math.abs(x[1] - x[0]) < PAUSEANGLE) {
 				return PAUSE;
 			} else if (x[0] < x[1]){
 				return SHRINK;
@@ -500,7 +670,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			}
 		}
 		else if (side == RIGHT) {
-			if (Math.abs(x[1] - x[0]) < pauseTolerance) {
+			if (Math.abs(x[1] - x[0]) < PAUSEANGLE) {
 				return PAUSE;
 			} else if (x[0] > x[1]){
 				return SHRINK;
@@ -555,8 +725,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			int width = Math.abs(line.x2 - line.x1);
 			int height = line.y2 - line.y1;	
 			data[PHASE][i] = getPhase(line);
-			data[DIST][i] = width * DISTANCERATIO;
-			data[TIME][i] = height * TIMERATIO;
+			data[DIST][i] = width * XSCALE;
+			data[TIME][i] = height * YSCALE;
 			data[RATE][i] = data[DIST][i] / data[TIME][i];
 		}
 
@@ -653,9 +823,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		if (lines != null && image.isVisible()) {
 			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
 			String label = image.getTitle();
-			String saveDir = imageDirectory;
-			String imagePath = saveDir + label + timeStamp + ".tif";
-			String filePath = saveDir + label + timeStamp + ".csv";
+			String imagePath = savingPath + label + timeStamp + ".tif";
+			String filePath = savingPath + label + timeStamp + ".csv";
 			if (image.changes) {
 				FileSaver saver = new FileSaver(image);
 				boolean success = saver.saveAsTiff(imagePath);
