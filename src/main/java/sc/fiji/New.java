@@ -24,8 +24,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import ij.io.FileSaver;
+import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.IOError;
+import java.io.IOException;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -75,12 +79,13 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	private Label pauseAngle;
 	private Button drawLeft;
 	private Button drawRight;
-	private Button drawOverlay;
-	private Button output;
 	private Button changeX;
 	private Button changeY;
-	private Button savePath;
 	private Button changePause;
+	private Button changeSaveLocationButton;
+	private Button saveNewButton;
+	private Button saveAppendButton;
+	private Button drawOverlay;
 
 
 	// control variables
@@ -177,7 +182,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		
 		frame.setVisible(true);
 		frame.setTitle("New Plugin");
-		frame.setSize(320, 500);
+		frame.setSize(340, 560);
 		
 		Panel drawPanel = new Panel();
 		Panel statPanel = new Panel();
@@ -189,7 +194,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		drawPanel.setLayout(new GridLayout());
 		statPanel.setLayout(new GridLayout(12,2));
 		settPanel.setLayout(new GridLayout(3,1));
-		funcPanel.setLayout(new FlowLayout());
+		funcPanel.setLayout(new GridLayout(4,1));
 		
 
 		// Draw buttons
@@ -336,23 +341,29 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		pausePanel.add(changePause);
 		settPanel.add(pausePanel);
 
+		frame.add(settPanel);
+
 
 		// Other functions
 
-		savePath = new Button("Change Save Folder");
-		savePath.addActionListener(this);
-		funcPanel.add(savePath);
+		changeSaveLocationButton = new Button("Change Save Location");
+		changeSaveLocationButton.addActionListener(this);
+		funcPanel.add(changeSaveLocationButton);
+		
+		saveNewButton = new Button("Save New");
+		saveNewButton.addActionListener(this);
+		funcPanel.add(saveNewButton);
+		
+		saveAppendButton = new Button("Save Append");
+		saveAppendButton.addActionListener(this);
+		funcPanel.add(saveAppendButton);
 
 		drawOverlay = new Button("Clear Overlay");
 		drawOverlay.addActionListener(this);
 		funcPanel.add(drawOverlay);
 
-		output = new Button("Output");
-		output.addActionListener(this);
-		funcPanel.add(output);
-
-		frame.add(settPanel);
 		frame.add(funcPanel);
+
 	}
 	
 	/***************************************************************************************
@@ -480,10 +491,13 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 */
 	private void changeXScale() {
 		double newXscale = IJ.getNumber("X-scale", XSCALE);
-		if (newXscale <= 0) {
+		if (newXscale == (double) IJ.CANCELED){
+			return;
+		}
+		else if (newXscale <= 0) {
 			IJ.error("X-scale must be positive");
 		}
-		else{
+		else if (newXscale != IJ.CANCELED){
 			XSCALE = newXscale;
 			xscale.setText(String.valueOf(XSCALE));
 			IJ.log("X-scale changed");
@@ -497,10 +511,10 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 */
 	private void changeYScale() {
 		double newYscale = IJ.getNumber("Y-scale", YSCALE);
-		if (newYscale <= 0) {
-			IJ.error("Y-scale must be positive");
+		if (newYscale == (double) IJ.CANCELED){
+			return;
 		}
-		else{
+		else if (newYscale <= 0) {
 			YSCALE = newYscale;
 			yscale.setText(String.valueOf(YSCALE));
 			IJ.log("Y-scale changed");
@@ -514,8 +528,11 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 */
 	private void changePauseAngle() {
 		double newPauseAngle = IJ.getNumber("Pause Angle", PAUSEANGLE);
-		if (newPauseAngle <= 0 || newPauseAngle >= 180) {
-			IJ.error("Pause Angle must be within 0 to 180 degree");
+		if (newPauseAngle == (double) IJ.CANCELED){
+			return;
+		}
+		else if (newPauseAngle < 0 || newPauseAngle >= 90) {
+			IJ.error("Pause Angle must be within 0 (inclusive) to 90 (exclusive) degree");
 		}
 		else{
 			PAUSEANGLE = newPauseAngle;
@@ -525,15 +542,15 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	}
 
 	/**
-	 * Start new drawing on the right side.
+	 * Select a directory to save.
 	 *
 	 * @return void.
 	 */
-	private void changeSavingPath() {
-		String newSavingPath = IJ.getDirectory("Saving Location");
+	private void changeSaveLoc() {
+		String newSavingPath = IJ.getDirectory("Select a location to save");
 		if (newSavingPath != null) {
 			savingPath = newSavingPath;
-			IJ.log("Saving location changed to: " + savingPath);
+			IJ.log("Save location changed to: " + savingPath);
 		}
 	}
 
@@ -619,14 +636,17 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		else if (label == "Change Pause Angle"){
 			changePauseAngle();
 		}
-		else if (label == "Change Saving Location"){
-			changeSavingPath();
+		else if (label == "Change Save Location"){
+			changeSaveLoc();
+		}
+		else if (label == "Save New"){
+			saveNew();
+		}
+		else if (label == "Save Append"){
+			saveAppend();
 		}
 		else if (label == "Clear Overlay" || label == "Show Overlay"){
 			changeOverlayShowOption();
-		}
-		else if (label == "Output"){
-			output();
 		}
 		else {
 			IJ.error("Invalid ActionEvent in actionPerformed");
@@ -658,10 +678,12 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		int[] x = {line.x1, line.x2};
 		int[] y = {line.y1, line.y2};
 		if (y[0] >= y[1]) return UNDEFINED;
+		double opposite = Math.abs(x[1] - x[0]);
+		double adjacent = Math.abs(y[1] - y[0]);
+		double degree = Math.toDegrees(Math.atan(opposite / adjacent));
+		if (degree <= PAUSEANGLE) return PAUSE;
 		if (side == LEFT) {
-			if (Math.abs(x[1] - x[0]) < PAUSEANGLE) {
-				return PAUSE;
-			} else if (x[0] < x[1]){
+			if (x[0] < x[1]){
 				return SHRINK;
 			} else if (x[0] > x[1]){
 				return GROWTH;
@@ -670,9 +692,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			}
 		}
 		else if (side == RIGHT) {
-			if (Math.abs(x[1] - x[0]) < PAUSEANGLE) {
-				return PAUSE;
-			} else if (x[0] > x[1]){
+			if (x[0] > x[1]){
 				return SHRINK;
 			} else if (x[0] < x[1]){
 				return GROWTH;
@@ -818,7 +838,13 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 
 	}
 
-	private void output() {
+
+	/**
+	 * Save data as a new file.
+	 *
+	 * @return void.
+	 */
+	private void saveNew() {
 		
 		if (lines != null && image.isVisible()) {
 			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
@@ -831,47 +857,90 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 				if (success) IJ.log("Output: Image saved.");
 			}
 			try (PrintWriter out = new PrintWriter(filePath)) {
-
 				String label1 = "Index, Label, Phase, Distance(um), Time(s), "
 					+ "Rate growth(um/s), Rate shrink(um/s), ";
 				String label2 = "Distance growth(um), Distance shrink(um), Time growth(s), Time shrink(s), "
 					+ "Catastrophe, Rescue, Catastrophe frequency, Rescue frequency";
 				out.println(label1 + label2);
-
-				for (int i=0; i<lines.length; i++) {
-					// Line l = lines[i];
-					String o = String.valueOf(i+1) + "," + label + ",";
-
-					o += phase2String(data[PHASE][i]) + ",";
-					o += String.valueOf(data[DIST][i]) + ",";
-					o += String.valueOf(data[TIME][i]) + ",";
-					if (data[PHASE][i] == GROWTH) o += String.valueOf(data[RATE][i]) + ",,";
-					else if (data[PHASE][i] == SHRINK) o += "," + String.valueOf(data[RATE][i]) + ",";
-					else o += ",,";
-
-					if (data2 != null) {
-						if(starts.contains(i)){
-							double[] currData2 = data2.get(starts.indexOf(i));
-							o += String.valueOf(currData2[DGROWTH]) + ",";
-							o += String.valueOf(currData2[DSHRINK]) + ",";
-							o += String.valueOf(currData2[TGROWTH]) + ",";
-							o += String.valueOf(currData2[TSHRINK]) + ",";
-							o += String.valueOf(currData2[NUMCAT]) + ",";
-							o += String.valueOf(currData2[NUMRES]) + ",";
-							o += String.valueOf(currData2[FREQCAT]) + ",";
-							o += String.valueOf(currData2[FREQRES]) + ",";
-						}
-					}
-
-					out.println(o);
-				}
-				
-				IJ.log("Output: Analysis saved.");
+				String o = output();
+				out.println(o);
+				IJ.log("Saved.");
 			} catch (FileNotFoundException e){
-				IJ.log("ERROR: File not found.");
+				IJ.error("ERROR: File not found.");
 			}
 		}
+		else{
+			IJ.error("Nothing to save");
+		}
 
+	}
+
+	/**
+	 * Choose a file to save append to it.
+	 *
+	 * @return void.
+	 */
+	private void saveAppend() {
+		if (lines != null && image.isVisible()) {
+			String appendPath = IJ.getFilePath("Select a csv file to append");
+			if (appendPath != null) {
+				if (!appendPath.substring(appendPath.length()-3).equals("csv")) {
+					IJ.error("Must select a \".csv\" file to append");
+					return;
+				}
+				IJ.log("Appending data to: " + appendPath);
+				try { 
+					// Open given file in append mode. 
+					BufferedWriter out = new BufferedWriter( 
+						new FileWriter(appendPath, true)); 
+					out.write(output()); 
+					out.close(); 
+					IJ.log("Finished.");
+				} 
+				catch (IOException e) { 
+					IJ.error("ERROR: exception occoured" + e); 
+				} 
+			}
+		}
+		else{
+			IJ.error("Nothing to save");
+		}
+	}
+
+	public String output() {
+		String o = "";
+		if (lines != null && image.isVisible()) {
+			String label = image.getTitle();
+			
+			for (int i=0; i<lines.length; i++) {
+				// Line l = lines[i];
+				o += String.valueOf(i+1) + "," + label + ",";
+				o += phase2String(data[PHASE][i]) + ",";
+				o += String.valueOf(data[DIST][i]) + ",";
+				o += String.valueOf(data[TIME][i]) + ",";
+				if (data[PHASE][i] == GROWTH) o += String.valueOf(data[RATE][i]) + ",,";
+				else if (data[PHASE][i] == SHRINK) o += "," + String.valueOf(data[RATE][i]) + ",";
+				else o += ",,";
+
+				if (data2 != null) {
+					if(starts.contains(i)){
+						double[] currData2 = data2.get(starts.indexOf(i));
+						o += String.valueOf(currData2[DGROWTH]) + ",";
+						o += String.valueOf(currData2[DSHRINK]) + ",";
+						o += String.valueOf(currData2[TGROWTH]) + ",";
+						o += String.valueOf(currData2[TSHRINK]) + ",";
+						o += String.valueOf(currData2[NUMCAT]) + ",";
+						o += String.valueOf(currData2[NUMRES]) + ",";
+						o += String.valueOf(currData2[FREQCAT]) + ",";
+						o += String.valueOf(currData2[FREQRES]) + ",";
+					}
+				}
+
+				o += "\n";
+			}
+			o += "\n";
+		}
+		return o;
 	}
 
 
