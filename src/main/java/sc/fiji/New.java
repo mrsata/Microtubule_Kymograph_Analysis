@@ -556,6 +556,108 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	}
 
 	/**
+	 * Save data as a new file.
+	 *
+	 * @return void.
+	 */
+	private void saveNew() {
+		
+		if (lines != null && image.isVisible()) {
+			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
+			String label = image.getTitle();
+			String fileName = label + timeStamp;
+			String imagePath = savingPath + fileName + ".tif";
+			String filePath = savingPath + fileName + ".csv";
+			IJ.log("File name: " + fileName);
+			if (image.changes) {
+				FileSaver saver = new FileSaver(image);
+				boolean success = saver.saveAsTiff(imagePath);
+				if (success) IJ.log("Image saved");
+			}
+			try (PrintWriter out = new PrintWriter(filePath)) {
+				String label1 = "Index, Label, Phase, Distance(um), Time(s), "
+					+ "Rate growth(um/s), Rate shrink(um/s), ";
+				String label2 = "Distance growth(um), Distance shrink(um), Time growth(s), Time shrink(s), "
+					+ "Catastrophe, Rescue, Catastrophe frequency, Rescue frequency";
+				out.println(label1 + label2);
+				String o = output();
+				out.print(o);
+				IJ.log("Data saved");
+			} catch (FileNotFoundException e){
+				IJ.error("ERROR: File not found");
+			}
+		}
+		else{
+			IJ.error("Nothing to save");
+		}
+
+	}
+
+	/**
+	 * Choose a file to save append to it.
+	 *
+	 * @return void.
+	 */
+	private void saveAppend() {
+		if (lines != null && image.isVisible()) {
+
+			// Append data
+			String appendDataPath = IJ.getFilePath("Select a (.csv) file to append data");
+			if (appendDataPath != null) {
+				if (!appendDataPath.substring(appendDataPath.length()-3).equals("csv")) {
+					IJ.error("Must select a \".csv\" file to append");
+					return;
+				}
+				IJ.log("Appending data to: " + new File(appendDataPath).getName());
+				try { 
+					// Open given file in append mode. 
+					BufferedWriter out = new BufferedWriter( 
+						new FileWriter(appendDataPath, true)); 
+					out.write(output()); 
+					out.close(); 
+					IJ.log("Data appended");
+				} 
+				catch (IOException e) { 
+					IJ.error("ERROR: exception occoured" + e); 
+				} 
+			} else {
+				IJ.log("Cancelled");
+				return;
+			}
+
+			// Append image
+			String appendImagePath = IJ.getFilePath("Select a (.tif) image to append overlay");
+			if (appendImagePath != null) {
+				ImagePlus appendImage = IJ.openImage(appendImagePath);
+				if (appendImage == null) {
+					IJ.error("Must select a \".tif\" image file to append");
+					return;
+				}
+				IJ.log("Appending overlay to: " + appendImage.getTitle());
+				Overlay appendOverlay = appendImage.getOverlay();
+				if (appendOverlay != null) {
+					for (Roi i:overlayRois.toArray()) {
+						appendOverlay.add(i);
+					}
+				}
+				else{
+					appendImage.setOverlay(overlayRois);
+				}
+				FileSaver saver = new FileSaver(appendImage);
+				boolean success = saver.save();
+				if (success) IJ.log("Overlay appended");
+			} else {
+				IJ.log("Cancelled");
+				return;
+			}
+
+		}
+		else{
+			IJ.error("Nothing to save");
+		}
+	}
+
+	/**
 	 * Change overlay show option.
 	 *
 	 * @return void.
@@ -566,7 +668,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		IJ.log(showOverlay ? "Show Overlay" : "Clear Overlay");
 		draw();
 	}
-	
+
 	/**
 	 * Adds listeners for key framing and anchor point selection.
 	 *
@@ -784,26 +886,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		return;
 	}
 
-	public void display(){
-		if (lines == null) return;
-		int n = lines.length;
-		phase.setText(phase2String(data[PHASE][n-1]));
-		distance.setText(String.valueOf(data[DIST][n-1]));
-		time.setText(String.valueOf(data[TIME][n-1]));
-		rate.setText(String.valueOf(data[RATE][n-1]));
-		if (data2 == null) return;
-		double[] currData2 = new double[8];
-		if (data[PHASE][n-1] != PAUSE) currData2 = data2.get(numMicrotubule-1);
-		numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
-		numRescue.setText(String.valueOf(currData2[NUMRES]));
-		timeGrowth.setText(String.valueOf(currData2[TGROWTH]));
-		timeShrink.setText(String.valueOf(currData2[TSHRINK]));
-		frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
-		frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
-		distanceGrowth.setText(String.valueOf(currData2[DGROWTH]));
-		distanceShrink.setText(String.valueOf(currData2[DSHRINK]));
-	}
-
 	private void draw() {
 		
 		if (lines != null) {
@@ -839,107 +921,24 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 
 	}
 
-
-	/**
-	 * Save data as a new file.
-	 *
-	 * @return void.
-	 */
-	private void saveNew() {
-		
-		if (lines != null && image.isVisible()) {
-			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
-			String label = image.getTitle();
-			String fileName = label + timeStamp;
-			String imagePath = savingPath + fileName + ".tif";
-			String filePath = savingPath + fileName + ".csv";
-			IJ.log("File name: " + fileName);
-			if (image.changes) {
-				FileSaver saver = new FileSaver(image);
-				boolean success = saver.saveAsTiff(imagePath);
-				if (success) IJ.log("Image saved");
-			}
-			try (PrintWriter out = new PrintWriter(filePath)) {
-				String label1 = "Index, Label, Phase, Distance(um), Time(s), "
-					+ "Rate growth(um/s), Rate shrink(um/s), ";
-				String label2 = "Distance growth(um), Distance shrink(um), Time growth(s), Time shrink(s), "
-					+ "Catastrophe, Rescue, Catastrophe frequency, Rescue frequency";
-				out.println(label1 + label2);
-				String o = output();
-				out.print(o);
-				IJ.log("Data saved");
-			} catch (FileNotFoundException e){
-				IJ.error("ERROR: File not found");
-			}
-		}
-		else{
-			IJ.error("Nothing to save");
-		}
-
-	}
-
-	/**
-	 * Choose a file to save append to it.
-	 *
-	 * @return void.
-	 */
-	private void saveAppend() {
-		if (lines != null && image.isVisible()) {
-
-			// Append data
-			String appendDataPath = IJ.getFilePath("Select a (.csv) file to append data");
-			if (appendDataPath != null) {
-				if (!appendDataPath.substring(appendDataPath.length()-3).equals("csv")) {
-					IJ.error("Must select a \".csv\" file to append");
-					return;
-				}
-				IJ.log("Appending data to: " + new File(appendDataPath).getName());
-				try { 
-					// Open given file in append mode. 
-					BufferedWriter out = new BufferedWriter( 
-						new FileWriter(appendDataPath, true)); 
-					out.write(output()); 
-					out.close(); 
-					IJ.log("Data appended");
-				} 
-				catch (IOException e) { 
-					IJ.error("ERROR: exception occoured" + e); 
-				} 
-			} else {
-				IJ.log("Cancelled");
-				return;
-			}
-
-			// Append image
-			String appendImagePath = IJ.getFilePath("Select a (.tif) image to append overlay");
-			if (appendImagePath != null) {
-				ImagePlus appendImage = IJ.openImage(appendImagePath);
-				if (appendImage == null) {
-					IJ.error("Must select a \".tif\" image file to append");
-					return;
-				}
-				IJ.log("Appending overlay to: " + appendImage.getTitle());
-				Overlay appendOverlay = appendImage.getOverlay();
-				if (appendOverlay != null) {
-					for (Roi i:overlayRois.toArray()) {
-						appendOverlay.add(i);
-					}
-				}
-				else{
-					appendImage.setOverlay(overlayRois);
-				}
-				FileSaver saver = new FileSaver(appendImage);
-				boolean success = saver.save();
-				if (success) IJ.log("Overlay appended");
-			} else {
-				IJ.log("Cancelled");
-				return;
-			}
-
-		}
-		else{
-			IJ.error("Nothing to save");
-		}
+	public void display(){
+		if (lines == null) return;
+		int n = lines.length;
+		phase.setText(phase2String(data[PHASE][n-1]));
+		distance.setText(String.valueOf(data[DIST][n-1]));
+		time.setText(String.valueOf(data[TIME][n-1]));
+		rate.setText(String.valueOf(data[RATE][n-1]));
+		if (data2 == null) return;
+		double[] currData2 = new double[8];
+		if (data[PHASE][n-1] != PAUSE) currData2 = data2.get(numMicrotubule-1);
+		numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
+		numRescue.setText(String.valueOf(currData2[NUMRES]));
+		timeGrowth.setText(String.valueOf(currData2[TGROWTH]));
+		timeShrink.setText(String.valueOf(currData2[TSHRINK]));
+		frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
+		frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
+		distanceGrowth.setText(String.valueOf(currData2[DGROWTH]));
+		distanceShrink.setText(String.valueOf(currData2[DSHRINK]));
 	}
 
 	public String output() {
