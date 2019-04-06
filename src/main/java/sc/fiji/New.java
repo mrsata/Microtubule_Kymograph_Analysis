@@ -29,7 +29,6 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 
 import ij.IJ;
@@ -269,25 +268,25 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		statPanel.add(timeShrinkLabel);
 		statPanel.add(timeShrink);
 		
-		numCatastrophe = new Label("0");
+		numCatastrophe = new Label("-");
 		Label numCatastropheLabel = new Label(" Number of Catastrophe: ");
 		numCatastropheLabel.setAlignment(Label.RIGHT);
 		statPanel.add(numCatastropheLabel);
 		statPanel.add(numCatastrophe);
 		
-		numRescue = new Label("0");
+		numRescue = new Label("-");
 		Label numRescueLabel = new Label(" Number of Rescue: ");
 		numRescueLabel.setAlignment(Label.RIGHT);
 		statPanel.add(numRescueLabel);
 		statPanel.add(numRescue);
 
-		frequencyCatastrophe = new Label("0");
+		frequencyCatastrophe = new Label("-");
 		Label frequencyCatastropheLabel = new Label(" Frequency Catastrophe: ");
 		frequencyCatastropheLabel.setAlignment(Label.RIGHT);
 		statPanel.add(frequencyCatastropheLabel);
 		statPanel.add(frequencyCatastrophe);
 		
-		frequencyRescue = new Label("0");
+		frequencyRescue = new Label("-");
 		Label frequencyRescueLabel = new Label(" Frequency Rescue: ");
 		frequencyRescueLabel.setAlignment(Label.RIGHT);
 		statPanel.add(frequencyRescueLabel);
@@ -441,14 +440,14 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		distance.setText("0");
 		time.setText("0");
 		rate.setText("0");
-		numCatastrophe.setText("0");
-		numRescue.setText("0");
-		timeGrowth.setText("0");
-		timeShrink.setText("0");
-		frequencyCatastrophe.setText("0");
-		frequencyRescue.setText("0");
 		distanceGrowth.setText("0");
 		distanceShrink.setText("0");
+		timeGrowth.setText("0");
+		timeShrink.setText("0");
+		numCatastrophe.setText("-");
+		numRescue.setText("-");
+		frequencyCatastrophe.setText("-");
+		frequencyRescue.setText("-");
 		xscale.setText(String.valueOf(XSCALE));
 		yscale.setText(String.valueOf(YSCALE));
 	}
@@ -886,6 +885,94 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		return;
 	}
 
+	public void display(){
+		if (lines == null) return;
+		int n = lines.length;
+		phase.setText(phase2String(data[PHASE][n-1]));
+		distance.setText(String.valueOf(data[DIST][n-1]));
+		time.setText(String.valueOf(data[TIME][n-1]));
+		rate.setText(String.valueOf(data[RATE][n-1]));
+		if (data2 == null) return;
+		double[] currData2 = new double[8];
+		if (data[PHASE][n-1] != PAUSE) currData2 = data2.get(numMicrotubule-1);
+		distanceGrowth.setText(String.valueOf(currData2[DGROWTH]));
+		distanceShrink.setText(String.valueOf(currData2[DSHRINK]));
+		timeGrowth.setText(String.valueOf(currData2[TGROWTH]));
+		timeShrink.setText(String.valueOf(currData2[TSHRINK]));
+		if (numCatastrophe.getText().equals("-")) {
+			if (currData2[DGROWTH] > 0) {
+				numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
+				frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
+			}
+		}
+		else {
+			numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
+			frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
+		}
+		if (numRescue.getText().equals("-")) {
+			if (currData2[DSHRINK] > 0) {
+				numRescue.setText(String.valueOf(currData2[NUMRES]));
+				frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
+			}
+		}
+		else {
+			numRescue.setText(String.valueOf(currData2[NUMRES]));
+			frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
+		}
+	}
+
+	public String output() {
+		String o = "";
+		if (lines != null && image.isVisible()) {
+			String label = image.getTitle();
+			
+			for (int i=0; i<lines.length; i++) {
+				// Line l = lines[i];
+				o += String.valueOf(i+1) + "," + label + ",";
+				o += phase2String(data[PHASE][i]) + ",";
+				o += String.valueOf(data[DIST][i]) + ",";
+				o += String.valueOf(data[TIME][i]) + ",";
+				if (data[PHASE][i] == GROWTH) o += String.valueOf(data[RATE][i]) + ",,";
+				else if (data[PHASE][i] == SHRINK) o += "," + String.valueOf(data[RATE][i]) + ",";
+				else o += ",,";
+
+				if (data2 != null) {
+					if(starts.contains(i)){
+						double[] currData2 = data2.get(starts.indexOf(i));
+						o += String.valueOf(currData2[DGROWTH]) + ",";
+						o += String.valueOf(currData2[DSHRINK]) + ",";
+						o += String.valueOf(currData2[TGROWTH]) + ",";
+						o += String.valueOf(currData2[TSHRINK]) + ",";
+						if (currData2[DGROWTH] > 0) {
+							o += String.valueOf(currData2[NUMCAT]) + ",";
+						} else {
+							o += "-,";
+						}
+						if (currData2[DSHRINK] > 0) {
+							o += String.valueOf(currData2[NUMRES]) + ",";
+						} else {
+							o += "-,";
+						}
+						if (currData2[DGROWTH] > 0) {
+							o += String.valueOf(currData2[FREQCAT]) + ",";
+						} else {
+							o += "-,";
+						}
+						if (currData2[DSHRINK] > 0) {
+							o += String.valueOf(currData2[FREQRES]) + ",";
+						} else {
+							o += "-,";
+						}
+					}
+				}
+
+				o += "\n";
+			}
+			o += "\n";
+		}
+		return o;
+	}
+
 	private void draw() {
 		
 		if (lines != null) {
@@ -920,63 +1007,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		}
 
 	}
-
-	public void display(){
-		if (lines == null) return;
-		int n = lines.length;
-		phase.setText(phase2String(data[PHASE][n-1]));
-		distance.setText(String.valueOf(data[DIST][n-1]));
-		time.setText(String.valueOf(data[TIME][n-1]));
-		rate.setText(String.valueOf(data[RATE][n-1]));
-		if (data2 == null) return;
-		double[] currData2 = new double[8];
-		if (data[PHASE][n-1] != PAUSE) currData2 = data2.get(numMicrotubule-1);
-		numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
-		numRescue.setText(String.valueOf(currData2[NUMRES]));
-		timeGrowth.setText(String.valueOf(currData2[TGROWTH]));
-		timeShrink.setText(String.valueOf(currData2[TSHRINK]));
-		frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
-		frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
-		distanceGrowth.setText(String.valueOf(currData2[DGROWTH]));
-		distanceShrink.setText(String.valueOf(currData2[DSHRINK]));
-	}
-
-	public String output() {
-		String o = "";
-		if (lines != null && image.isVisible()) {
-			String label = image.getTitle();
-			
-			for (int i=0; i<lines.length; i++) {
-				// Line l = lines[i];
-				o += String.valueOf(i+1) + "," + label + ",";
-				o += phase2String(data[PHASE][i]) + ",";
-				o += String.valueOf(data[DIST][i]) + ",";
-				o += String.valueOf(data[TIME][i]) + ",";
-				if (data[PHASE][i] == GROWTH) o += String.valueOf(data[RATE][i]) + ",,";
-				else if (data[PHASE][i] == SHRINK) o += "," + String.valueOf(data[RATE][i]) + ",";
-				else o += ",,";
-
-				if (data2 != null) {
-					if(starts.contains(i)){
-						double[] currData2 = data2.get(starts.indexOf(i));
-						o += String.valueOf(currData2[DGROWTH]) + ",";
-						o += String.valueOf(currData2[DSHRINK]) + ",";
-						o += String.valueOf(currData2[TGROWTH]) + ",";
-						o += String.valueOf(currData2[TSHRINK]) + ",";
-						o += String.valueOf(currData2[NUMCAT]) + ",";
-						o += String.valueOf(currData2[NUMRES]) + ",";
-						o += String.valueOf(currData2[FREQCAT]) + ",";
-						o += String.valueOf(currData2[FREQRES]) + ",";
-					}
-				}
-
-				o += "\n";
-			}
-			o += "\n";
-		}
-		return o;
-	}
-
 
 	/***************************************************************************************
 	*   Listeners
