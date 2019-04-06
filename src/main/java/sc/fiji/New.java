@@ -1082,18 +1082,26 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	@Override
 	public void imageClosed(ImagePlus ip) {
 		IJ.log("Image closed");
-		clearDisplay();
+		if (WindowManager.getImageCount() == 0) {
+			image = null;
+			clearDisplay();
+			Roi.removeRoiListener(this);
+		}
 	}
 
 	@Override
 	public void imageOpened(ImagePlus arg0) {
 		IJ.log("Image opened");
-		// get the associated image parameters
-		image = IJ.getImage();
-		imageDirectory = IJ.getDir("image");
-		window = image.getWindow();
-		canvas = image.getCanvas();
-		redraw();
+		if (WindowManager.getImageCount() == 1) {
+			Roi.addRoiListener(this);
+			// get the associated image parameters
+			image = IJ.getImage();
+			imageDirectory = IJ.getDir("image");
+			IJ.log(imageDirectory);
+			window = image.getWindow();
+			canvas = image.getCanvas();
+			redraw();
+		}
 	}
 
 	/**
