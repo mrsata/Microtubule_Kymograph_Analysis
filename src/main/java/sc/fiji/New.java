@@ -24,11 +24,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import ij.io.FileSaver;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
-import java.io.IOError;
+import java.io.FileReader;
 import java.io.IOException;
 
 import ij.IJ;
@@ -54,7 +55,7 @@ import ij.plugin.frame.PlugInFrame;
  * Purpose: imageJ plugin to measure kymographs
  *
  * @author Han Liu
- * @version v1.0
+ * @version v0.2
  */
 @SuppressWarnings("serial")
 public class New extends PlugInFrame implements PlugIn, ActionListener, ImageListener, RoiListener, KeyListener, MouseListener {
@@ -849,12 +850,14 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		if (lines != null && image.isVisible()) {
 			String timeStamp = new SimpleDateFormat(".MM.dd.HH.mm").format(new Date());
 			String label = image.getTitle();
-			String imagePath = savingPath + label + timeStamp + ".tif";
-			String filePath = savingPath + label + timeStamp + ".csv";
+			String fileName = label + timeStamp;
+			String imagePath = savingPath + fileName + ".tif";
+			String filePath = savingPath + fileName + ".csv";
+			IJ.log("File name: " + fileName);
 			if (image.changes) {
 				FileSaver saver = new FileSaver(image);
 				boolean success = saver.saveAsTiff(imagePath);
-				if (success) IJ.log("Output: Image saved.");
+				if (success) IJ.log("Image saved");
 			}
 			try (PrintWriter out = new PrintWriter(filePath)) {
 				String label1 = "Index, Label, Phase, Distance(um), Time(s), "
@@ -863,10 +866,10 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 					+ "Catastrophe, Rescue, Catastrophe frequency, Rescue frequency";
 				out.println(label1 + label2);
 				String o = output();
-				out.println(o);
-				IJ.log("Saved.");
+				out.print(o);
+				IJ.log("Data saved");
 			} catch (FileNotFoundException e){
-				IJ.error("ERROR: File not found.");
+				IJ.error("ERROR: File not found");
 			}
 		}
 		else{
@@ -882,25 +885,57 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 */
 	private void saveAppend() {
 		if (lines != null && image.isVisible()) {
-			String appendPath = IJ.getFilePath("Select a csv file to append");
-			if (appendPath != null) {
-				if (!appendPath.substring(appendPath.length()-3).equals("csv")) {
+
+			// Append data
+			String appendDataPath = IJ.getFilePath("Select a (.csv) file to append data");
+			if (appendDataPath != null) {
+				if (!appendDataPath.substring(appendDataPath.length()-3).equals("csv")) {
 					IJ.error("Must select a \".csv\" file to append");
 					return;
 				}
-				IJ.log("Appending data to: " + appendPath);
+				IJ.log("Appending data to: " + new File(appendDataPath).getName());
 				try { 
 					// Open given file in append mode. 
 					BufferedWriter out = new BufferedWriter( 
-						new FileWriter(appendPath, true)); 
+						new FileWriter(appendDataPath, true)); 
 					out.write(output()); 
 					out.close(); 
-					IJ.log("Finished.");
+					IJ.log("Data appended");
 				} 
 				catch (IOException e) { 
 					IJ.error("ERROR: exception occoured" + e); 
 				} 
+			} else {
+				IJ.log("Cancelled");
+				return;
 			}
+
+			// Append image
+			String appendImagePath = IJ.getFilePath("Select a (.tif) image to append overlay");
+			if (appendImagePath != null) {
+				ImagePlus appendImage = IJ.openImage(appendImagePath);
+				if (appendImage == null) {
+					IJ.error("Must select a \".tif\" image file to append");
+					return;
+				}
+				IJ.log("Appending overlay to: " + appendImage.getTitle());
+				Overlay appendOverlay = appendImage.getOverlay();
+				if (appendOverlay != null) {
+					for (Roi i:overlayRois.toArray()) {
+						appendOverlay.add(i);
+					}
+				}
+				else{
+					appendImage.setOverlay(overlayRois);
+				}
+				FileSaver saver = new FileSaver(appendImage);
+				boolean success = saver.save();
+				if (success) IJ.log("Overlay appended");
+			} else {
+				IJ.log("Cancelled");
+				return;
+			}
+
 		}
 		else{
 			IJ.error("Nothing to save");
