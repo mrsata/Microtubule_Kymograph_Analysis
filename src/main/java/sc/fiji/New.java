@@ -915,8 +915,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			numRescue.setText(String.valueOf(currData2[NUMRES]));
 			frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
 		}
-		IJ.log(String.valueOf(currData2[NUMCAT]));
-		IJ.log(String.valueOf(currData2[NUMRES]));
 	}
 
 	public String output() {
