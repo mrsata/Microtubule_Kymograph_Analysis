@@ -490,7 +490,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 * @return void.
 	 */
 	private void changeXScale() {
-		double newXscale = IJ.getNumber("X-scale", XSCALE);
+		double newXscale = IJ.getNumber("X-scale: ", XSCALE);
 		if (newXscale == (double) IJ.CANCELED){
 			return;
 		}
@@ -510,11 +510,14 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 * @return void.
 	 */
 	private void changeYScale() {
-		double newYscale = IJ.getNumber("Y-scale", YSCALE);
+		double newYscale = IJ.getNumber("Y-scale: ", YSCALE);
 		if (newYscale == (double) IJ.CANCELED){
 			return;
 		}
 		else if (newYscale <= 0) {
+			IJ.error("Y-scale must be positive");
+		}
+		else if (newYscale != IJ.CANCELED){
 			YSCALE = newYscale;
 			yscale.setText(String.valueOf(YSCALE));
 			IJ.log("Y-scale changed");
@@ -527,7 +530,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 * @return void.
 	 */
 	private void changePauseAngle() {
-		double newPauseAngle = IJ.getNumber("Pause Angle", PAUSEANGLE);
+		double newPauseAngle = IJ.getNumber("Pause Angle: ", PAUSEANGLE);
 		if (newPauseAngle == (double) IJ.CANCELED){
 			return;
 		}
