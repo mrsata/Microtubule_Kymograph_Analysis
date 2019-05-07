@@ -160,6 +160,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		showOverlay = true;
 		drawRight();
 		IJ.run(image, "Line Width...", "line=2");
+		frame.setVisible(true);
 
 	}
 
