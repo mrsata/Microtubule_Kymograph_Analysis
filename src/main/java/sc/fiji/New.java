@@ -5,13 +5,15 @@
 package sc.fiji;
 
 import java.awt.Frame;
-import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.Panel;
 import java.awt.Polygon;
 import java.awt.Button;
 import java.awt.Color;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -179,17 +181,16 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		//set up the UI frame
 		frame = this;
 		WindowManager.addWindow(this);
-		
-		frame.setVisible(true);
 		frame.setTitle("New Plugin");
-		frame.setSize(340, 560);
+
+		Panel outPanel = new Panel();
+		Panel mainPanel = new Panel();
+		Panel secPanel = new Panel();
 		
 		Panel drawPanel = new Panel();
 		Panel statPanel = new Panel();
 		Panel settPanel = new Panel();
 		Panel funcPanel = new Panel();
-
-		frame.setLayout(new FlowLayout());
 
 		drawPanel.setLayout(new GridLayout());
 		statPanel.setLayout(new GridLayout(12,2));
@@ -198,7 +199,6 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		
 
 		// Draw buttons
-
 		drawLeft = new Button("Draw Left");
 		drawLeft.addActionListener(this);
 		drawPanel.add(drawLeft);
@@ -207,19 +207,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		drawRight.addActionListener(this);
 		drawPanel.add(drawRight);
 
-		frame.add(drawPanel);
-
 
 		// Statisitcs
-
-		Panel statTitle = new Panel(new GridLayout());
-		Label statLabel = new Label(" Statistics ");
-		statLabel.setAlignment(Label.CENTER);
-		statTitle.add(new Label("----------"));
-		statTitle.add(statLabel);
-		statTitle.add(new Label("----------"));
-		frame.add(statTitle);
-
 		phase = new Label("0");
 		Label phaseLabel = new Label(" Phase: ");
 		phaseLabel.setAlignment(Label.RIGHT);
@@ -292,60 +281,42 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		statPanel.add(frequencyRescueLabel);
 		statPanel.add(frequencyRescue);
 
-		frame.add(statPanel);
-
 
 		// Settings and outputs
+		GridBagConstraints cs = new GridBagConstraints();
+		cs.fill = GridBagConstraints.BOTH;
+		cs.gridwidth = GridBagConstraints.REMAINDER;
 
-		Panel settTitle = new Panel(new FlowLayout());
-		Label settLabel = new Label(" Settings ");
-		settLabel.setAlignment(Label.CENTER);
-		settTitle.add(new Label("----------"));
-		settTitle.add(settLabel);
-		settTitle.add(new Label("----------"));
-		frame.add(settTitle);
-		
-		Panel xscalePanel = new Panel();
-		xscalePanel.setLayout(new FlowLayout());
+		settPanel.setLayout(new GridBagLayout());
 		xscale = new Label(String.valueOf(XSCALE));
 		Label xscaleLabel = new Label(" X-scale(μm/pixel): ");
 		xscaleLabel.setAlignment(Label.RIGHT);
-		xscalePanel.add(xscaleLabel);
-		xscalePanel.add(xscale);
 		changeX = new Button("Change X-scale");
 		changeX.addActionListener(this);
-		xscalePanel.add(changeX);
-		settPanel.add(xscalePanel);
+		settPanel.add(xscaleLabel);
+		settPanel.add(xscale);
+		settPanel.add(changeX, cs);
 		
-		Panel yscalePanel = new Panel();
-		yscalePanel.setLayout(new FlowLayout());
 		yscale = new Label(String.valueOf(YSCALE));
 		Label yscaleLabel = new Label(" Y-scale(sec/pixel): ");
 		yscaleLabel.setAlignment(Label.RIGHT);
-		yscalePanel.add(yscaleLabel);
-		yscalePanel.add(yscale);
 		changeY = new Button("Change Y-scale");
 		changeY.addActionListener(this);
-		yscalePanel.add(changeY);
-		settPanel.add(yscalePanel);
+		settPanel.add(yscaleLabel);
+		settPanel.add(yscale);
+		settPanel.add(changeY, cs);
 
-		Panel pausePanel = new Panel();
-		pausePanel.setLayout(new FlowLayout());
 		pauseAngle = new Label(String.valueOf(PAUSEANGLE));
 		Label pauseLabel = new Label(" Pause Angle(°): ");
 		pauseLabel.setAlignment(Label.RIGHT);
-		pausePanel.add(pauseLabel);
-		pausePanel.add(pauseAngle);
 		changePause = new Button("Change Pause Angle");
 		changePause.addActionListener(this);
-		pausePanel.add(changePause);
-		settPanel.add(pausePanel);
-
-		frame.add(settPanel);
+		settPanel.add(pauseLabel);
+		settPanel.add(pauseAngle);
+		settPanel.add(changePause, cs);
 
 
 		// Other functions
-
 		changeSaveLocationButton = new Button("Change Save Location");
 		changeSaveLocationButton.addActionListener(this);
 		funcPanel.add(changeSaveLocationButton);
@@ -362,7 +333,25 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		drawOverlay.addActionListener(this);
 		funcPanel.add(drawOverlay);
 
-		frame.add(funcPanel);
+		// Arrange Panels
+		mainPanel.setLayout(new GridBagLayout());
+		secPanel.setLayout(new GridBagLayout());
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.insets = new Insets(10,0,10,0);
+		mainPanel.add(drawPanel, c);
+		mainPanel.add(statPanel, c);
+		outPanel.add(mainPanel);
+		secPanel.add(settPanel, c);
+		secPanel.add(funcPanel, c);
+		outPanel.add(secPanel);
+		
+		frame.add(outPanel);
+		frame.pack();
+		frame.setVisible(true);
+
 
 	}
 	
@@ -500,7 +489,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		else if (newXscale != IJ.CANCELED){
 			XSCALE = newXscale;
 			xscale.setText(String.valueOf(XSCALE));
-			IJ.log("X-scale changed");
+			frame.pack();
+			IJ.log("X-scale changed to " + String.valueOf(XSCALE));
 		}
 	}
 
@@ -520,7 +510,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		else if (newYscale != IJ.CANCELED){
 			YSCALE = newYscale;
 			yscale.setText(String.valueOf(YSCALE));
-			IJ.log("Y-scale changed");
+			frame.pack();
+			IJ.log("Y-scale changed to " + String.valueOf(YSCALE));
 		}
 	}
 
@@ -540,7 +531,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		else{
 			PAUSEANGLE = newPauseAngle;
 			pauseAngle.setText(String.valueOf(PAUSEANGLE));
-			IJ.log("Pause Angle changed");
+			frame.pack();
+			IJ.log("Pause Angle changed to " + String.valueOf(PAUSEANGLE));
 		}
 	}
 
