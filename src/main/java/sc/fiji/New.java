@@ -865,11 +865,11 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 					if (data[PHASE][j] == GROWTH){
 						d[TGROWTH] += data[TIME][j];
 						d[DGROWTH] += data[DIST][j];
-						if (j > 1 && data[PHASE][j-1] == SHRINK) d[NUMRES] += 1;
+						if (j > 0 && data[PHASE][j-1] == SHRINK) d[NUMRES] += 1;
 					} else if (data[PHASE][j] == SHRINK) {
 						d[TSHRINK] += data[TIME][j];
 						d[DSHRINK] += data[DIST][j];
-						d[NUMCAT] += 1;
+						if (j > 0 && data[PHASE][j-1] == GROWTH) d[NUMCAT] += 1;
 					}
 				}
 				if (d[TGROWTH] != 0) d[FREQCAT] = d[NUMCAT]/d[TGROWTH];
@@ -919,6 +919,8 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 			numRescue.setText(String.valueOf(currData2[NUMRES]));
 			frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
 		}
+		IJ.log(String.valueOf(currData2[NUMCAT]));
+		IJ.log(String.valueOf(currData2[NUMRES]));
 	}
 
 	public String output() {
