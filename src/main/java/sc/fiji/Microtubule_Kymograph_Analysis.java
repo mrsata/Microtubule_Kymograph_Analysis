@@ -52,14 +52,14 @@ import ij.plugin.frame.PlugInFrame;
 
 
 /**
- * New.java
- * Purpose: imageJ plugin to measure kymographs
+ * Microtubule_Kymograph_Analysis.java
+ * Purpose: imageJ plugin to measure and analyze microtubule kymographs
  *
  * @author Han Liu
- * @version v0.2
+ * @version v1.0
  */
 @SuppressWarnings("serial")
-public class New extends PlugInFrame implements PlugIn, ActionListener, ImageListener, RoiListener, KeyListener, MouseListener {
+public class Microtubule_Kymograph_Analysis extends PlugInFrame implements PlugIn, ActionListener, ImageListener, RoiListener, KeyListener, MouseListener {
 	
 
 	// UI window
@@ -168,9 +168,9 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 * Constructs the UI window. Initializes buttons and adds appropriate listeners.
 	 * Note this method is ran whenever the plugin is ran.
 	 */
-	public New() {
+	public Microtubule_Kymograph_Analysis() {
 		
-		super("New");
+		super("Microtubule_Kymograph_Analysis");
 		if(frame != null) {
 			WindowManager.toFront(frame);
 			return;
@@ -182,7 +182,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		//set up the UI frame
 		frame = this;
 		WindowManager.addWindow(this);
-		frame.setTitle("New Plugin");
+		frame.setTitle("Microtubule Kymograph Analysis");
 
 		Panel outPanel = new Panel();
 		Panel mainPanel = new Panel();
@@ -370,7 +370,7 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 	 */
 	public static void main(String[] args) {
 		
-		Class<?> clazz = New.class;
+		Class<?> clazz = Microtubule_Kymograph_Analysis.class;
 		
 		// set the plugins.dir property to make the plugin appear in the Plugins menu
 		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
