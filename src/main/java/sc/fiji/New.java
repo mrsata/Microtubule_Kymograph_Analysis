@@ -887,33 +887,33 @@ public class New extends PlugInFrame implements PlugIn, ActionListener, ImageLis
 		phase.setText(phase2String(data[PHASE][n-1]));
 		distance.setText(String.valueOf(data[DIST][n-1]));
 		time.setText(String.valueOf(data[TIME][n-1]));
-		rate.setText(String.valueOf(data[RATE][n-1]));
+		rate.setText(String.format("%.3f", data[RATE][n-1]));
 		if (data2 == null) return;
 		double[] currData2 = new double[8];
 		if (data[PHASE][n-1] != PAUSE) currData2 = data2.get(numMicrotubule-1);
-		distanceGrowth.setText(String.valueOf(currData2[DGROWTH]));
-		distanceShrink.setText(String.valueOf(currData2[DSHRINK]));
-		timeGrowth.setText(String.valueOf(currData2[TGROWTH]));
-		timeShrink.setText(String.valueOf(currData2[TSHRINK]));
+		distanceGrowth.setText(String.format("%.3f", currData2[DGROWTH]));
+		distanceShrink.setText(String.format("%.3f", currData2[DSHRINK]));
+		timeGrowth.setText(String.format("%.3f", currData2[TGROWTH]));
+		timeShrink.setText(String.format("%.3f", currData2[TSHRINK]));
 		if (numCatastrophe.getText().equals("-")) {
 			if (currData2[DGROWTH] > 0) {
 				numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
-				frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
+				frequencyCatastrophe.setText(String.format("%.3f", currData2[FREQCAT]));
 			}
 		}
 		else {
 			numCatastrophe.setText(String.valueOf(currData2[NUMCAT]));
-			frequencyCatastrophe.setText(String.valueOf(currData2[FREQCAT]));
+			frequencyCatastrophe.setText(String.format("%.3f", currData2[FREQCAT]));
 		}
 		if (numRescue.getText().equals("-")) {
 			if (currData2[DSHRINK] > 0) {
 				numRescue.setText(String.valueOf(currData2[NUMRES]));
-				frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
+				frequencyRescue.setText(String.format("%.3f", currData2[FREQRES]));
 			}
 		}
 		else {
 			numRescue.setText(String.valueOf(currData2[NUMRES]));
-			frequencyRescue.setText(String.valueOf(currData2[FREQRES]));
+			frequencyRescue.setText(String.format("%.3f", currData2[FREQRES]));
 		}
 	}
 
