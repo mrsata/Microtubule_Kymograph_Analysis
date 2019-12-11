@@ -1,6 +1,6 @@
-# New Plugin
+# Microtubule Kymograph Analysis
 
-ImageJ plugin for kymograph measurements and statistics (mainly of microtubule dynamics).
+ImageJ plugin for microtubule kymograph measurements and analysis.
 
 ## Prerequisites
 
@@ -10,9 +10,9 @@ We recommend installing the [Fiji](http://fiji.sc/) distribution of ImageJ. It i
 
 ## Installation
 
-* Download the "New_Plugin-(version number).jar" fine on your own computer. The most recent version of the plugin can be found at the releases tab(coming soon) on the New_Plugin GitHub page.
+* Download the "Microtubule_Kymograph_Analysis-(version number).jar" fine on your own computer. The most recent version of the plugin can be found at the releases tab(coming soon) on the Microtubule_Kymograph_Analysis GitHub page.
 * Save the file in the Fiji "plugins" folder.
-* Restart Fiji, and the plugin should appear in “Process” -> “New Plugin”
+* Restart Fiji, and the plugin should appear in “Process” -> “Microtubule Kymograph Analysis”
 
 ```
 The numbers after the hyphen denote the version number of the plugin.
@@ -24,7 +24,7 @@ and replace it with the new one.
 
 * In Fiji, open a kymograph image that you would like to analyze. The plugin assumes the time axis of a kymograph image is vertical.
 
-* Run the new plugin (in “Process” -> “New Plugin”).
+* Run the plugin (in “Process” -> “Microtubule Kymograph Analysis”).
 
 * The UI has the following features:
   * Draw Left button - Reset statistics (if any) and prepares the user to draw a segmented line (polyline) to track activities on the left side of the kymograph image.
@@ -43,11 +43,11 @@ and replace it with the new one.
 
 * You can close and open another image and analyze it without reopening the plugin. However, if you open multiple images, the plugin only works for the most recent one, and you have to reopen the plugin if you want to analyze another existing image.
 
-* If you want to close the plugin, press the “x” button on the “New Plugin” window.
+* If you want to close the plugin, press the “x” button on the “Microtubule Kymograph Analysis” window.
 
 ## Design
 
-###Overlay
+### Overlay
 
 - The overlay aligns a line of default width 2 to each segment of the segmented line (polyline). 
 - Each line alignment has a color depending on the current phase of the activity indicated by the segment. The colors corresponding to the 4 kinds of phases are:
@@ -56,7 +56,7 @@ and replace it with the new one.
   - Blue: pause / no activity
   - No color: undefined (horizontal or upward line)
 
-###Output
+### Output
 
 - The outputs are saved in the same directory as the opened image.
 - The columns of the statistics sheet are: 
