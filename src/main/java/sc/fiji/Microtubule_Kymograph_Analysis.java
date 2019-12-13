@@ -885,8 +885,8 @@ public class Microtubule_Kymograph_Analysis extends PlugInFrame implements PlugI
 		if (lines == null) return;
 		int n = lines.length;
 		phase.setText(phase2String(data[PHASE][n-1]));
-		distance.setText(String.valueOf(data[DIST][n-1]));
-		time.setText(String.valueOf(data[TIME][n-1]));
+		distance.setText(String.format("%.3f", data[DIST][n-1]));
+		time.setText(String.format("%.3f", data[TIME][n-1]));
 		rate.setText(String.format("%.3f", data[RATE][n-1]));
 		if (data2 == null) return;
 		double[] currData2 = new double[8];
